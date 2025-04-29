@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
 import hbs from "handlebars";
-import axios from "axios";
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_KEY ?? "");
 
@@ -811,16 +810,12 @@ DeleteCard: async (req: Request, res: Response) => {
     }
 
     const user = await User.findByPk(userId);
-    if (!user || !user.stripeCustomerId) {
+    if (!user?.stripeCustomerId) {
       return res.status(404).json({ status: 0, message: 'User or Stripe customer not found' });
     }
 
-    const customerId = user.stripeCustomerId;
-
     // Detach the card from the customer
     await stripe.paymentMethods.detach(cardId);
-
-    // Optionally, you can also remove the card from your local database if needed
 
     return res.json({
       status: 1,
@@ -834,8 +829,8 @@ DeleteCard: async (req: Request, res: Response) => {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-
 },
+
 AddPet: async (req: Request, res: Response) => {
   const userId = req.user?.id; // Use authenticated user ID
 
