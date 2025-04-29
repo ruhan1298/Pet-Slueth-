@@ -1,7 +1,6 @@
 // models/ShowRoomUser.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../../models/index';
-// import AddCarsPost from '../models/AddCarsPost';
 
 interface PetAttributes {
   id?: number;

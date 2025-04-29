@@ -1,7 +1,5 @@
-// models/ShowRoomUser.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../../models/index';
-// import AddCarsPost from '../models/AddCarsPost';
 
 interface MasterAttributes {
   id?: number; // Use string type for UUID
@@ -51,6 +49,5 @@ MasterData.init(
     modelName: 'masterData',
   }
 );
-// AddCarsPost.belongsTo(Favourite, { foreignKey: 'car_id' });
 
 export default MasterData;

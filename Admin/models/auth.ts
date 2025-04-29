@@ -1,9 +1,5 @@
-// models/ShowRoomUser.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../../models/index';
-import { v4 as uuidv4 } from 'uuid';
-import { Default } from 'sequelize-typescript';
-// import AddCarsPost from '../models/AddCarsPost';
 
 interface AdminAttributes {
   id?: string; // Use string type for UUID
@@ -85,6 +81,5 @@ Admin.init(
     modelName: 'Admin',
   }
 );
-// AddCarsPost.belongsTo(Favourite, { foreignKey: 'car_id' });
 
 export default Admin;

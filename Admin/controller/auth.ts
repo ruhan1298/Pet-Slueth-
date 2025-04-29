@@ -8,14 +8,13 @@ import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { runInNewContext } from "vm";
 import MasterData from "../models/masterData";
 import User from "../../User/models/user";
 
 const templatePath = path.join(__dirname, '../../views/otptemplate.hbs');
 const source = fs.readFileSync(templatePath, 'utf-8');
 const template = hbs.compile(source);
-const stripe = new Stripe(process.env.STRIPE_KEY || "");
+const stripe = new Stripe(process.env.STRIPE_KEY ?? "");
 
 
 export default {
@@ -120,10 +119,10 @@ AdminLogin: async (req: Request, res: Response) => {
       }
 
       // Update the user's information
-      user.fullName = fullName || user.fullName;
-      user.email = email || user.email;
-      user.mobilenumber = mobilenumber || user.mobilenumber;
-      user.image = image || user.image;
+      user.fullName = fullName ?? user.fullName;
+      user.email = email ?? user.email;
+      user.mobilenumber = mobilenumber ?? user.mobilenumber;
+      user.image = image ?? user.image;
       
       await user.save();
 
@@ -324,12 +323,13 @@ AddMasterData: async (req: Request, res: Response) => {
     if (!name || !type) {
       return res.status(400).json({ message: "Name and type are required." });
     }
-    const addData = MasterData.create({
+    await MasterData.create({
       name,
       type
     })
     res.json({status:1,message:"Master Data add successfully"})
   } catch (error) {
+    console.error("Error in AddMasterData:", error);
     
     return res.status(500).json({
       status: 0,
@@ -393,15 +393,15 @@ UpdateMasterData: async (req: Request, res: Response) => {
       return res.status(404).json({ message:"master data not found" });
 
      }
-     master.name = name || master.name;
-     master.type = type || master.type;
-    //  customers.image = image || customers.image;
+     master.name = name ?? master.name;
+     master.type = type ?? master.type;
       await master.save();
       res.status(200).json({ status:1,message: "master data update successfully",data:master
        });
       
   } catch (error) {
       console.error(error);
+
       res.status(500).json({ message:"Internal Server Error"});
 
       
@@ -420,7 +420,13 @@ DeleteMasterData:async (req:Request,res:Response)=>{
   await GetMasterData?.destroy()
   res.json({status:1,message:"Master data delete successfully"})
   } catch (error) {
+    console.error("Error in DeleteMasterData:", error);
+    return res.status(500).json({
+      status: 0,
+      message: 'Internal Server Error',
+    });
     
+
   }
 },
 UserList:async (req:Request,res:Response)=>{
@@ -531,213 +537,6 @@ BlockUnblockUser: async (req: Request, res: Response) => {
       status: 0,
       message: 'Internal Server Error',
     });
-  }
-},
-AddProductSubscription: async (req: Request, res: Response) => {
-  try {
-       // Step 1: Product banao
-       const product = await stripe.products.create({
-        name: 'Premium Plan',
-        description: 'Monthly premium subscription',
-      });
-  
-      // Step 2: Price banao (recurring ke liye)
-      const price = await stripe.prices.create({
-        unit_amount: 1000, // amount in cents ($10)
-        currency: 'usd',
-        recurring: { interval: 'month' },
-        product: product.id,
-      });
-  
-      res.json({
-        message: 'Product and price created successfully',
-        productId: product.id,
-        priceId: price.id,
-      });
-  } catch (error) {
-    console.error("Error in AddProductSubscription:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  }
-
-},
-getproductsubscription: async (req: Request, res: Response) => {
-  try {
-    // Step 1: Get all products
-    const products = await stripe.products.list({ limit: 100 });
-
-    // Step 2: For each product, get its prices
-    const productData = await Promise.all(
-      products.data.map(async (product) => {
-        const prices = await stripe.prices.list({
-          product: product.id,
-          limit: 10,
-        });
-
-        return {
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          prices: prices.data.map((price) => ({
-            id: price.id,
-            currency: price.currency,
-            unit_amount: price.unit_amount,
-            recurring: price.recurring,
-          })),
-        };
-      })
-    );
-
-    res.json({status:1,message:"subscription list get successfully",data:productData});
-  } catch (err) {
-    console.error('Stripe Error:', err);
-    res.status(500).json({ error: err });
-  }
-},
-
-updateProductSubscription: async (req: Request, res: Response) => {
-  try {
-    
-    
-  } catch (error) {
-    console.error("Error in updateProductSubscription:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  
-  }
-
-},
-checkoutsession: async (req: Request, res: Response) => {
-  try {
-    const { priceId } = req.body;
-    console.log(priceId, "PRICE ID");
-
-    // Step 1: Create a Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'], // add more if needed
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `http://${req.headers.host}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://${req.headers.host}/cancel`,
-    });
-
-    // Step 2: Redirect to the Checkout Session URL
-    res.json({status:1,message:"checkout session created successfully",url: session.url});
-    
-
-  } catch (error) {
-    console.error("Error in checkoutsession:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  }
-},
-webhook: async (req: Request, res: Response) => {
-  try {
-    const sig = req.headers['stripe-signature'];
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-
-    let event: Stripe.Event;
-
-    try {
-      if (!sig) {
-        throw new Error('Stripe signature is missing');
-      }
-      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } catch (err) {
-      console.error('Error constructing webhook event:', err);
-      return res.status(400).send(`Webhook Error: ${err}`);
-
-    }
-
-    // Handle the event
-    switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object;
-        console.log('Checkout session completed:', session);
-        break;
-      // Handle other event types as needed
-      default:
-        console.log(`Unhandled event type ${event.type}`);
-    }
-
-    res.json({ received: true });
-    
-  } catch (error) {
-    console.error("Error in webhook:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  }
-},
-PausedSubscription: async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId } = req.body;
-    console.log(subscriptionId, "SUBSCRIPTION ID");
-
-    // Step 1: Pause the subscription
-    const subscription = await stripe.subscriptions.update(subscriptionId, {
-      pause_collection: { behavior: 'mark_uncollectible' },
-    });
-
-    res.json({status:1,message:"subscription paused successfully",data:subscription});
-    
-  } catch (error) {
-    console.error("Error in PausedSubscription:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  }
-},
-ResumeSubscription: async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId } = req.body;
-    console.log(subscriptionId, "SUBSCRIPTION ID");
-
-    // Step 1: Resume the subscription
-    const subscription = await stripe.subscriptions.update(subscriptionId, {
-      pause_collection: null,
-    });
-
-    res.json({status:1,message:"subscription resumed successfully",data:subscription});
-    
-  } catch (error) {
-    console.error("Error in ResumeSubscription:", error);
-    return res.status(500).json({
-      status: 0,
-      message: 'Internal Server Error',
-    });
-    
-  }
-
-},
-cancelSubscription: async (req: Request, res: Response) => {
-  try {
-    const { subscriptionId} = req.body;
-    console.log(subscriptionId, "SUBSCRIPTION ID")
-  
-  const subscription = await stripe.subscriptions.cancel(subscriptionId);
-  console.log(subscription, "SUBSCRIPTION CANCELLED")
-  res.json({status:1,message:"subscription cancelled successfully",data:subscription});
-  
-
-
-
-  } catch (error) {
-    console.error('Error in cancelSubscription:', error);
-    res.status(500).json({ status: 0, message: 'Internal Server Error' });
   }
 },
 

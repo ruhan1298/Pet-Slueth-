@@ -6,15 +6,12 @@ import path from "path";
 import hbs from "handlebars";
 import axios from "axios";
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_KEY || "");
+const stripe = new Stripe(process.env.STRIPE_KEY ?? "");
 
 import fs from "fs";
-import userAuth from "../../middleware/UserAuth";
 import nodemailer from "nodemailer";
-import { features } from "process";
 import Subscription from "../models/subsciption";
 import Pet from "../models/pet";
-import { log } from "handlebars/runtime";
 const templatePath = path.join(__dirname, '../../views/otptemplate.hbs');
 const source = fs.readFileSync(templatePath, 'utf-8');
 const template = hbs.compile(source);
@@ -26,35 +23,11 @@ export default {
   
   
 
-  Breed: async (req: Request, res: Response) => {
-    const breedName = req.body.name as string;
-
-    if (!breedName) {
-      return res.status(400).json({ error: "Breed name is required" });
-    }
-  
-    try {
-      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(breedName)}`;
-      const response = await axios.get(wikiUrl);
-  
-      const { title, extract, thumbnail } = response.data;
-  
-      res.json({
-        title,
-        description: extract,
-        image: thumbnail?.source || null,
-      });
-    } catch (error) {
-      // console.error("Wiki fetch error:", error.message);
-      res.status(500).json({ error: "Failed to fetch breed information" });
-    }
-  },
 
 
 UserRegister: async (req: Request, res: Response) => {
     try {
       const {  password, email,fullName,mobilenumber } = req.body;
-// const image ='uploads\\bead2399-9898-4b74-9650-bf2facdaaafa.png'
       // Validate input
       if (!email || !password) {
         return res.json({ status: 0, message: "All input is required." });
@@ -74,7 +47,7 @@ UserRegister: async (req: Request, res: Response) => {
         name: `${fullName}`,
         email: email,
     });
-    const account = await stripe.accounts.create({
+     await stripe.accounts.create({
       type: 'express',
       country: 'US',
       email: email, // Use the email provided by the user
@@ -141,8 +114,7 @@ UserRegister: async (req: Request, res: Response) => {
         if (!user) {
             return res.status(400).json({ status: 0, message: "Invalid Email" });
         }
-        // user.deviceToken = deviceId;
-        // user.deviceType = deviceType;        // Compare the provided password with the stored hashed password
+ 
         await user.save(); // Save the updated user object
 
         const isPasswordValid = await bcrypt.compare(password, user.password as unknown as string);
@@ -212,11 +184,10 @@ const image = req.file?.path; // Normalize path
         }
 
             // Update the user's information
-      user.fullName =  fullName|| user.fullName;
-      user.email = email || user.email;
-      user.mobilenumber = mobilenumber|| user.mobilenumber;
-      user.image= image || user.image
-      // user.Interests = interests || user.Interests
+      user.fullName =  fullName ?? user.fullName;
+      user.email = email ?? user.email;
+      user.mobilenumber = mobilenumber ?? user.mobilenumber;
+      user.image= image ?? user.image
 
 
       await user.save();
@@ -278,9 +249,8 @@ console.log(req.body,"BODY");
             // Update user with social login details if user already exists
             user.socialId = socialId;
             user.socialType = socialType;
-            // user.deviceToken = deviceToken;
-            // user.deviceType = deviceType;
-            user.fullName = fullName || user.fullName;
+         
+            user.fullName = fullName ?? user.fullName;
 
             // Save the updated user details
             await user.save();
@@ -469,6 +439,11 @@ UpdatePassword: async (req: Request, res: Response) => {
     return res.status(200).json({ status: 1, message: "Password update successfully" });
   
   } catch (error) {
+    console.error('Error updating password:', error);
+    return res.status(500).json({
+      status: 0,
+      message: 'Internal Server Error',
+    });
     
   }
  
@@ -488,7 +463,7 @@ GetProductSubscription: async (req: Request, res: Response) => {
         .map((price) => ({
           id: price.id,
           price: price.unit_amount ? price.unit_amount / 100 : 0, // Cents to Dollars
-          interval: price.recurring?.interval || 'month'
+          interval: price.recurring?.interval ?? 'month'
         }));
 
       return {
@@ -660,7 +635,6 @@ createSubscription: async (req: Request, res: Response) => {
 PauseSubscription: async (req: Request, res: Response) => {
   try {
     const { subscriptionId } = req.body;
-    const userId = req.user?.id; // Assuming you have user authentication middleware
 
     if (!subscriptionId) {
       return res.status(400).json({ status: 0, message: 'Subscription ID is required' });
@@ -703,7 +677,6 @@ PauseSubscription: async (req: Request, res: Response) => {
 ResumeSubscription: async (req: Request, res: Response) => {
   try {
     const { subscriptionId } = req.body;
-    const userId = req.user?.id; // Assuming you have user authentication middleware
 
     if (!subscriptionId) {
       return res.status(400).json({ status: 0, message: 'Subscription ID is required' });
@@ -897,7 +870,7 @@ AddPet: async (req: Request, res: Response) => {
         const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
 
         // Check if the file is an image (either by MIME type or extension)
-        if (file.mimetype.startsWith('image/') || ['jpg', 'jpeg', 'png'].includes(fileExtension || '')) {
+        if (file.mimetype.startsWith('image/') || ['jpg', 'jpeg', 'png'].includes(fileExtension ?? '')) {
           photos.push({
             id: imageCounter++,
             image: file.path,

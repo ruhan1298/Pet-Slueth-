@@ -32,6 +32,7 @@ const userAuth = (req: Request, res: Response, next: NextFunction): void => {
     console.log(req.user, 'user....................');
     next(); // Pass control to the next middleware or route handler
   } catch (err) {
+    console.error('Token verification error:', err);
     res.status(401).json({ status: 0, message: 'Invalid Token' });
   }
 };

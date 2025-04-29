@@ -1,7 +1,5 @@
-// models/ShowRoomUser.ts
 import { Model, DataTypes } from 'sequelize';
 import sequelize  from '../../models/index';
-import { Json } from 'sequelize/types/utils';
 interface UserAttributes {
   id?: string; // Use string type for UUID
   fullName?: string;

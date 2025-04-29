@@ -1,6 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../../models/index';
-import { Json } from 'sequelize/types/utils';
 
 interface SubscriptionAttributes {
     id?: number;

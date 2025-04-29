@@ -3,8 +3,6 @@ const router: Router = express.Router();
 import UserController from '../../User/controller/user';
 import upload from '../../middleware/upload';
 import UserAuth from '../../middleware/UserAuth';
-import user from '../../User/controller/user';
-import userAuth from '../../middleware/UserAuth';
 
 
 
@@ -18,9 +16,7 @@ router.post("/register", (req: Request, res: Response) => {
   });
   
   // Route for customer login
-  router.post("/breed-info", (req: Request, res: Response) => {
-    UserController.Breed(req, res);
-  });
+
   router.post("/login", (req: Request, res: Response) => {
     UserController.UserLogin(req, res);
   });
@@ -56,17 +52,17 @@ router.post("/register", (req: Request, res: Response) => {
       UserController.UpdatePassword(req, res);
     })
 
-    router.post("/Add-card", userAuth,(req: Request, res: Response) => {
+    router.post("/Add-card", UserAuth,(req: Request, res: Response) => {
       UserController.AddCard(req, res);
     })
-    router.post("/get-card", userAuth,(req: Request, res: Response) => {
+    router.post("/get-card", UserAuth,(req: Request, res: Response) => {
       UserController.GetCard(req, res);
     })
 
-    router.post("/delete-card", userAuth,(req: Request, res: Response) => {
+    router.post("/delete-card", UserAuth,(req: Request, res: Response) => {
       UserController.DeleteCard(req, res);
     })
-    router.post("/add-pet",upload.fields([{name:'photos'}, {name:'pdf'},{name:'vaccinationCertificate'}]), userAuth,(req: Request, res: Response) => {
+    router.post("/add-pet",upload.fields([{name:'photos'}, {name:'pdf'},{name:'vaccinationCertificate'}]), UserAuth,(req: Request, res: Response) => {
       UserController.AddPet(req, res);
     })
 

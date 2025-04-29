@@ -42,25 +42,4 @@ router.post("/delete-user",UserAuth, (req: Request, res: Response) => {
 router.post("/block-unblock",UserAuth, (req: Request, res: Response) => {
   authController.BlockUnblockUser(req, res);
 });
-router.post("/add-product", (req: Request, res: Response) => {
-  authController.AddProductSubscription(req, res);
-});
-router.post("/get-product", (req: Request, res: Response) => {
-  authController.getproductsubscription(req, res);
-});
-router.post("/check-out", (req: Request, res: Response) => {
-  authController.checkoutsession(req, res);
-});
-router.post("/web-hook", (req: Request, res: Response) => {
-  authController.webhook(req, res);
-});
-router.post("/pause-subscription", (req: Request, res: Response) => {
-  authController.PausedSubscription(req, res);
-});
-router.post("/resume-subscription", (req: Request, res: Response) => {
-  authController.ResumeSubscription(req, res);
-});
-router.post("/cancel-subscription", (req: Request, res: Response) => {
-  authController.cancelSubscription(req, res);
-});
  export default router

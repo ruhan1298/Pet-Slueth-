@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import dotenv from "dotenv";
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_KEY || "");
+const stripe = new Stripe(process.env.STRIPE_KEY ?? "");
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
