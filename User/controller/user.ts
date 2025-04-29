@@ -317,24 +317,24 @@ UserForgetPassword: async (req: Request, res: Response) => {
 
   try {
     // Step 1: Check if email exists in the database
-    const user = await User.findOne({
+    const Adminuser = await User.findOne({
       where: { email: email },
     });
 
-    if (!user) {
+    if (!Adminuser) {
       return res.status(400).json({ status: 0, message:'User not found' });
     }
 
     // Step 2: Generate OTP (Random token for password reset)
     const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
     const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP expiration in 10 minutes
-    await user.update({
+    await Adminuser.update({
       resetPasswordToken: resetToken,
       resetPasswordExpires: resetExpires, // Correctly passing Date object
     });
     const emailData = {
       companyName: "Your Company Name",
-      firstName: user.fullName,
+      firstName: Adminuser.fullName,
       action: "reset your password",
       otp: resetToken,
       otpExpiry: "10 minutes",
@@ -383,9 +383,9 @@ UserOtpVerify: async (req: Request, res: Response) => {
 
   try {
     // Step 1: Check if the email exists
-    const user = await User.findOne({ where: { email } });
+    const Adminuser = await User.findOne({ where: { email } });
 
-    if (!user) {
+    if (!Adminuser) {
       return res.status(404).json({
         status: 0,
         message: 'User not found',
@@ -395,9 +395,9 @@ UserOtpVerify: async (req: Request, res: Response) => {
     // Step 2: Check if the OTP is valid
     const currentTime = new Date();
     if (
-      user.resetPasswordToken !== otp || // OTP mismatch
-      !user.resetPasswordExpires || // Expiry not set
-      user.resetPasswordExpires < currentTime // OTP expired
+      Adminuser.resetPasswordToken !== otp || // OTP mismatch
+      !Adminuser.resetPasswordExpires || // Expiry not set
+      Adminuser.resetPasswordExpires < currentTime // OTP expired
     ) {
       return res.status(400).json({
         status: 0,
@@ -421,9 +421,9 @@ UserOtpVerify: async (req: Request, res: Response) => {
 UserUpdatePassword: async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   try {
-    const user = await User.findOne({ where: { email } });
+    const Adminuser = await User.findOne({ where: { email } });
 
-    if (!user) {
+    if (!Adminuser) {
       return res.status(404).json({
         status: 0,
         message: 'User not found',
@@ -432,8 +432,8 @@ UserUpdatePassword: async (req: Request, res: Response) => {
     
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    user.password = hashedPassword; // Ensure 'hashedPassword' type matches 'user.password'
-    await user.save();
+    Adminuser.password = hashedPassword; // Ensure 'hashedPassword' type matches 'user.password'
+    await Adminuser.save();
 
     return res.status(200).json({ status: 1, message: "Password update successfully" });
   
