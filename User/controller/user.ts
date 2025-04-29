@@ -706,13 +706,13 @@ AddCard: async (req: Request, res: Response) => {
     }
 
     // Fetch stripeCustomerId from the database
-    const users = await User.findOne({ where: { id: userId } });
+    const user = await User.findOne({ where: { id: userId } });
 
-    if (!users) {
+    if (!user) {
       return res.status(404).json({ message: "Users not found" });
     }
 
-    const stripeCustomerId = users.stripeCustomerId;
+    const stripeCustomerId = user.stripeCustomerId;
 
     if (!stripeCustomerId) {
       return res.status(400).json({ message: "Stripe customer ID not found" });
