@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Update</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #66ccff, #3399ff);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      text-align: center;
+    }
+    .header {
+      background-color: #3399ff;
+      padding: 30px 20px 20px 20px;
+    }
+    .header img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      color: #ffffff;
+      font-size: 24px;
+      margin: 0;
+      font-weight: bold;
+    }
+    .content {
+      padding: 30px 20px;
+      font-size: 16px;
+      color: #333333;
+      text-align: left;
+    }
+    .content strong {
+      color: #000000;
+    }
+    .button-container {
+      margin: 30px 0;
+      text-align: center;
+    }
+    .button {
+      background-color: #3399ff;
+      color: white;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .button:hover {
+      background-color: #2b85d3;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+    .footer {
+      font-size: 12px;
+      color: #999999;
+      padding: 20px;
+      text-align: center;
+    }
+    .footer a {
+      color: #3399ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <img src="/uploads/App Icon@2x.png" alt="Logo">
+      <h1>Subscription Update</h1>
+    </div>
+    <div class="content">
+      <p>Dear <strong>{{customerName}}</strong>,</p>
+      <p>We’re excited to inform you that we have updated our subscription pricing at <strong>Pet Sleuth</strong>.</p>
+      <p>Starting from <strong>{{updateDate}}</strong>, the updated pricing will be in effect. Your current price of <strong>${{currentPrice}}</strong> will adjust accordingly.</p>
+      new price of <strong>${{newPrice}}</strong> will be applied to your account.</p>
+      <p>We appreciate your understanding and support as we continue to enhance our services.</p>
+      <p>Thanks for being a valued member of the Pet Sleuth family! 🐾</p>
+
+    <div class="footer">
+      Need help? Contact us at <a href="mailto:support@petsleuth.com">support@petsleuth.com</a><br>
+      © 2025 Pet Sleuth
+    </div>
+  </div>
+
+</body>
+</html>
