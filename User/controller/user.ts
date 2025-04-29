@@ -312,7 +312,7 @@ console.log(req.body,"BODY");
         });
     }
 },
-ForgetPassword: async (req: Request, res: Response) => {
+UserForgetPassword: async (req: Request, res: Response) => {
     const email = req.body.email;
 
   try {
@@ -374,7 +374,7 @@ ForgetPassword: async (req: Request, res: Response) => {
   }
 
 },
-OtpVerify: async (req: Request, res: Response) => {
+UserOtpVerify: async (req: Request, res: Response) => {
   const { email, otp } = req.body;
   console.log(req.body, "BODY");
   if(!otp){
@@ -418,7 +418,7 @@ OtpVerify: async (req: Request, res: Response) => {
     });
   }
 },
-UpdatePassword: async (req: Request, res: Response) => {
+UserUpdatePassword: async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   try {
     const user = await User.findOne({ where: { email } });

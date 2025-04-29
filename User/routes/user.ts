@@ -39,17 +39,17 @@ router.post("/register", (req: Request, res: Response) => {
     router.post("/forget-password", (req: Request, res: Response) => {
   
   
-      UserController.ForgetPassword(req, res);
+      UserController.UserForgetPassword(req, res);
     });
     router.post("/otp-verify", (req: Request, res: Response) => {
   
   
-      UserController.OtpVerify(req, res);
+      UserController.UserForgetPassword(req, res);
     });
     router.post("/update-password", (req: Request, res: Response) => {
   
   
-      UserController.UpdatePassword(req, res);
+      UserController.UserUpdatePassword(req, res);
     })
 
     router.post("/Add-card", UserAuth,(req: Request, res: Response) => {
