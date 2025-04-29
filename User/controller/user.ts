@@ -533,94 +533,75 @@ createSubscription: async (req: Request, res: Response) => {
     }
 
     const user = await User.findByPk(userId);
-    if (!user || !user.stripeCustomerId) {
+    if (!user?.stripeCustomerId) {
       return res.status(404).json({ status: 0, message: 'User or Stripe customer not found' });
     }
 
     const customerId = user.stripeCustomerId;
 
-    // Attach payment method to the customer
+    // Attach payment method and set as default
     await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
-
-    // Update the default payment method
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
 
-    // Create the subscription
-    const subscription: Stripe.Subscription = await stripe.subscriptions.create({
+    // Create subscription
+    const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
     });
 
-    // Ensure latest_invoice is valid before calling retrieve
-    if (subscription.latest_invoice) {
-      const invoice = await stripe.invoices.retrieve(subscription.latest_invoice as string);
+    if (!subscription.latest_invoice) {
+      return res.status(400).json({ status: 0, message: 'No latest invoice found for this subscription' });
+    }
 
-      // If the invoice is paid, no payment intent needed
-      if (invoice.status === 'paid') {
-        await Subscription.create({
-          userId,
-          customerId,
-          subscriptionId: subscription.id,
-          productId: priceId,
-          status: subscription.status as "active" | "canceled" | "incomplete" | "past_due" | undefined,
-          currentPeriodStart: subscription.start_date ? new Date(subscription.start_date * 1000) : undefined,
-          currentPeriodEnd: subscription.ended_at? new Date(subscription.ended_at * 1000) : undefined,
-          nextBillingDate: invoice.next_payment_attempt ? new Date(invoice.next_payment_attempt * 1000) : undefined,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
-        });
+    const invoice = await stripe.invoices.retrieve(subscription.latest_invoice as string);
 
-        return res.json({
-          status: 1,
-          subscriptionId: subscription.id,
-          subscriptionStatus: subscription.status,
-          subscription: subscription,
-          message: 'Subscription created and payment processed successfully',
-        });
-      }
+    const commonSubscriptionData = {
+      userId,
+      customerId,
+      subscriptionId: subscription.id,
+      productId: priceId,
+      status: subscription.status as "active" | "canceled" | "incomplete" | "past_due" | undefined,
+      currentPeriodStart: subscription.start_date ? new Date(subscription.start_date * 1000) : undefined,
+      currentPeriodEnd: subscription.ended_at ? new Date(subscription.ended_at * 1000) : undefined,
+      nextBillingDate: invoice.next_payment_attempt ? new Date(invoice.next_payment_attempt * 1000) : undefined,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
+    };
 
-      // Check if payment_intent exists on the invoice
-      if ('payment_intent' in invoice && invoice.payment_intent) {
-        const paymentIntentId = (invoice as any).payment_intent;
+    if (invoice.status === 'paid') {
+      await Subscription.create(commonSubscriptionData);
 
-        // Retrieve the payment intent details
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-        await Subscription.create({
-          userId,
-          customerId,
-          subscriptionId: subscription.id,
-          productId: priceId,
-          status: 'incomplete',  // Subscription is incomplete until payment is successful
-          currentPeriodStart: subscription.start_date ? new Date(subscription.start_date * 1000) : undefined,
-          currentPeriodEnd: subscription.ended_at? new Date(subscription.ended_at * 1000) : undefined,
-          nextBillingDate: invoice.next_payment_attempt ? new Date(invoice.next_payment_attempt * 1000) : undefined,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
-        });
-
-        return res.json({
-          status: 1,
-          subscriptionId: subscription.id,
-          clientSecret: paymentIntent.client_secret,
-          paymentIntentId: paymentIntent.id,
-          subscriptionStatus: subscription.status,
-        });
-      } else {
-        return res.status(400).json({
-          status: 0,
-          message: 'No payment intent associated with this invoice',
-        });
-      }
-    } else {
-      return res.status(400).json({
-        status: 0,
-        message: 'No latest invoice found for this subscription',
+      return res.json({
+        status: 1,
+        subscriptionId: subscription.id,
+        subscriptionStatus: subscription.status,
+        subscription,
+        message: 'Subscription created and payment processed successfully',
       });
     }
+
+    const paymentIntentId = (invoice as any)?.payment_intent;
+    if (!paymentIntentId) {
+      return res.status(400).json({ status: 0, message: 'No payment intent associated with this invoice' });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    await Subscription.create({
+      ...commonSubscriptionData,
+      status: 'incomplete', // Because payment not done yet
+    });
+
+    return res.json({
+      status: 1,
+      subscriptionId: subscription.id,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      subscriptionStatus: subscription.status,
+    });
 
   } catch (error) {
     console.error('Error in createSubscription:', error);
@@ -631,6 +612,7 @@ createSubscription: async (req: Request, res: Response) => {
     });
   }
 },
+
 PauseSubscription: async (req: Request, res: Response) => {
   try {
     const { subscriptionId } = req.body;
